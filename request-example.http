@@ -1,0 +1,16 @@
+GET http://localhost:3000
+
+###
+
+GET http://localhost:3000/cats
+
+###
+
+POST http://localhost:3000/cats
+content-type: application/json
+
+{
+  "name": "Fluffy",
+  "age": 23,
+  "breed": "Streets"
+}
