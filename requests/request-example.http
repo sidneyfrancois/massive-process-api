@@ -4,6 +4,12 @@ GET http://localhost:3000
 GET http://localhost:3000/cats
 
 ###
+GET http://localhost:3000/cats/error
+
+###
+GET http://localhost:3000/cats/error-request
+
+###
 GET http://localhost:3000/cats/id
 
 ###
