@@ -1,4 +1,11 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpException,
+  HttpStatus,
+  Post,
+} from '@nestjs/common';
 import { CreateCatDTO } from './dto/create-cat.dto';
 import { CatsService } from './cats.service';
 import { Cat } from './interfaces/cat.interface';
@@ -15,5 +22,19 @@ export class CatsController {
   @Post()
   async create(@Body() createCatDTO: CreateCatDTO) {
     return this.catsService.create(createCatDTO);
+  }
+
+  @Get('id')
+  async findById() {
+    throw new HttpException(
+      {
+        status: HttpStatus.FORBIDDEN,
+        error: 'this will be sent to the user',
+      },
+      HttpStatus.FORBIDDEN,
+      {
+        cause: 'message for logging purpuses',
+      },
+    );
   }
 }
