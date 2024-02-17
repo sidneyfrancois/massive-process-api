@@ -24,8 +24,12 @@ export class SocketFileGateway {
     this.server.disconnectSockets();
   }
 
-  emitFileStatus(status: string) {
-    this.server.emit('file-upload', status);
+  emitFileStatus(bytesProcessed: number) {
+    this.server.emit('file-upload', bytesProcessed);
+  }
+
+  emitProcessedBytes(bytesProcessed: number) {
+    this.server.emit('bytes-processed', bytesProcessed);
   }
 
   @SubscribeMessage('createSocketFile')
