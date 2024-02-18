@@ -28,8 +28,8 @@ export class SocketFileGateway {
     this.server.emit('file-upload', bytesProcessed);
   }
 
-  emitProcessedBytes(bytesProcessed: number) {
-    this.server.emit('bytes-processed', bytesProcessed);
+  emitProcessedBytes(statusData: { bytesProcessed: number; fileName: string }) {
+    this.server.emit('bytes-processed', statusData);
   }
 
   @SubscribeMessage('createSocketFile')

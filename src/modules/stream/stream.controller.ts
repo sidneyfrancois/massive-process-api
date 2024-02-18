@@ -35,7 +35,10 @@ export class FilesController {
           const fileContent: any[] = [];
           entry.on('data', (chunk) => {
             console.log('chunk length: ', chunk.length);
-            this.socketGateway.emitProcessedBytes(chunk.length);
+            this.socketGateway.emitProcessedBytes({
+              bytesProcessed: chunk.length,
+              fileName: fileName,
+            });
             fileContent.push(chunk);
           });
 
