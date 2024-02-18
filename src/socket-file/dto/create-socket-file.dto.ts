@@ -1,1 +1,3 @@
-export class CreateSocketFileDto {}
+export class CreateSocketFileDto {
+  
+}

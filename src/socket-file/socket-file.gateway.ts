@@ -3,11 +3,12 @@ import {
   SubscribeMessage,
   MessageBody,
   WebSocketServer,
+  ConnectedSocket,
 } from '@nestjs/websockets';
 import { SocketFileService } from './socket-file.service';
 import { CreateSocketFileDto } from './dto/create-socket-file.dto';
 import { UpdateSocketFileDto } from './dto/update-socket-file.dto';
-import { Server } from 'socket.io';
+import { Server, Socket } from 'socket.io';
 
 @WebSocketGateway({
   cors: {
@@ -19,6 +20,14 @@ export class SocketFileGateway {
   server: Server;
 
   constructor(private readonly socketFileService: SocketFileService) {}
+
+  handleConnection(@ConnectedSocket() client: Socket) {
+    console.log(`Connected cliend id: ${client.id}`);
+  }
+
+  handleDisconnect(@ConnectedSocket() client: Socket) {
+    console.log(`Disconnected client id: ${client.id}`);
+  }
 
   disconnect() {
     this.server.disconnectSockets();

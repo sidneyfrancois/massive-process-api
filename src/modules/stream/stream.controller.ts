@@ -26,15 +26,15 @@ export class FilesController {
       fileStream
         .pipe(unzipper.Parse())
         .on('entry', async (entry) => {
-          console.log(entry.vars.uncompressedSize);
+          // console.log(entry.vars.uncompressedSize);
           const fileName = entry.path;
-          console.log('name: ', fileName);
+          // console.log('name: ', fileName);
           // this.socketGateway.emitFileStatus();
           quantity++;
           // Read each file from the zip stream
           const fileContent: any[] = [];
           entry.on('data', (chunk) => {
-            console.log('chunk length: ', chunk.length);
+            // console.log('chunk length: ', chunk.length);
             this.socketGateway.emitProcessedBytes({
               bytesProcessed: chunk.length,
               fileName: fileName,
@@ -54,10 +54,10 @@ export class FilesController {
             transformedStream.push(null);
 
             // Handle the transformed content here (send to another service, save to DB, etc.)
-            transformedStream.on('data', (chunk) => {
-              // Do something with the transformed chunk
-              // console.log('transformed: ', chunk.toString());
-            });
+            // transformedStream.on('data', (chunk) => {
+            // Do something with the transformed chunk
+            // console.log('transformed: ', chunk.toString());
+            // });
           });
         })
         .on('error', (err) => {
@@ -69,7 +69,10 @@ export class FilesController {
           console.log(`Memory used: ${Math.round(used * 100) / 100} MB`);
           console.log(`Number of files: ${quantity}`);
           console.log('File unzipped and processed successfully');
-          resolve('Process finished!');
+          resolve({
+            memoryUsed: Math.round(used * 100) / 100,
+            numberOfFiles: quantity,
+          });
         });
     });
   }
