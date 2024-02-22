@@ -6,15 +6,11 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Readable } from 'stream';
-import { SocketFileGateway } from '../../socket-file/socket-file.gateway';
 import { StreamService } from './stream.service';
 
 @Controller('archive')
 export class FilesController {
-  constructor(
-    private readonly socketGateway: SocketFileGateway,
-    private readonly streamService: StreamService,
-  ) {}
+  constructor(private readonly streamService: StreamService) {}
 
   @Post('upload-file')
   @UseInterceptors(FileInterceptor('file'))
