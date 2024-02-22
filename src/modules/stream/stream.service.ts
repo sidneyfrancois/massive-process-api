@@ -5,7 +5,6 @@ import * as unzipper from 'unzipper';
 import createExcelWorkbookStream from 'excel-row-stream';
 import { pipeline } from 'stream/promises';
 import * as ExcelRowStream from 'excel-row-stream';
-import { ExcelReader, ExcelWriter } from 'node-excel-stream';
 
 @Injectable()
 export class StreamService {
@@ -71,7 +70,8 @@ export class StreamService {
   }
 
   printValue = (row: any, _encoding, callback) => {
-    this.quantity++;
+    const converted = JSON.stringify(row.columns);
+    console.log(converted);
     callback();
   };
 
