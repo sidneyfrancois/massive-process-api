@@ -5,14 +5,16 @@ import * as unzipper from 'unzipper';
 import createExcelWorkbookStream from 'excel-row-stream';
 import { pipeline } from 'stream/promises';
 import * as ExcelRowStream from 'excel-row-stream';
+import { ExcelReader, ExcelWriter } from 'node-excel-stream';
 
 @Injectable()
 export class StreamService {
-  constructor(private readonly socketGateway: SocketFileGateway) {}
+  private quantity;
+  constructor(private readonly socketGateway: SocketFileGateway) {
+    this.quantity = 0;
+  }
 
   processZipXML(fileStream: Readable) {
-    let quantity = 0;
-
     return new Promise((resolve, reject) => {
       fileStream
         .pipe(unzipper.Parse())
@@ -21,7 +23,7 @@ export class StreamService {
           const fileName = entry.path;
           // console.log('name: ', fileName);
           // this.socketGateway.emitFileStatus();
-          quantity++;
+          this.quantity++;
           // Read each file from the zip stream
           const fileContent: any[] = [];
           entry.on('data', (chunk) => {
@@ -58,15 +60,20 @@ export class StreamService {
         .on('finish', () => {
           const used = process.memoryUsage().heapUsed / 1024 / 1024;
           console.log(`Memory used: ${Math.round(used * 100) / 100} MB`);
-          console.log(`Number of files: ${quantity}`);
+          console.log(`Number of files: ${this.quantity}`);
           console.log('File unzipped and processed successfully');
           resolve({
             memoryUsed: Math.round(used * 100) / 100,
-            numberOfFiles: quantity,
+            numberOfFiles: this.quantity,
           });
         });
     });
   }
+
+  printValue = (row: any, _encoding, callback) => {
+    this.quantity++;
+    callback();
+  };
 
   async processExcel(fileStream: Readable) {
     const workbookStream = createExcelWorkbookStream({
@@ -75,19 +82,22 @@ export class StreamService {
     });
 
     const withColumnsStream = ExcelRowStream.createRowToRowWithColumnsStream({
-      sanitizeColumnName: (columnName) =>
-        columnName.toLowerCase().replace(/\W/g, '_'),
+      sanitizeColumnName: (columnName) => {
+        return columnName.toLowerCase().replace(/\W/g, '_');
+      },
     });
 
     const resultStream = new Writable({
       objectMode: true,
-      write(row: any, _encoding, callback) {
-        // console.log(row.index, row.columns);
-        console.log(JSON.stringify(row.columns));
-        callback();
-      },
+      write: this.printValue,
     });
 
     await pipeline(fileStream, workbookStream, withColumnsStream, resultStream);
+    const used = process.memoryUsage().heapUsed / 1024 / 1024;
+
+    return {
+      memoryUsed: Math.round(used * 100) / 100,
+      numberOfFiles: this.quantity,
+    };
   }
 }
