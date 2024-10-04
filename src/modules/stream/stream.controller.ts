@@ -5,12 +5,14 @@ import {
   UploadedFile,
   Res,
   Req,
+  UploadedFiles,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { Readable } from 'stream';
 import { StreamService } from './stream.service';
 import { Request, Response } from 'express';
 import * as Busboy from 'busboy';
+import * as unzipper from 'unzipper';
 
 @Controller('archive')
 export class FilesController {
@@ -30,11 +32,8 @@ export class FilesController {
   @Post('stream/upload-zip')
   async uploadFileV2(@Req() req: Request, @Res() res: Response) {
     const busboy = Busboy({ headers: req.headers });
-    const promises: Promise<any>[] = []; // Array to hold promises for each file
-
     busboy.on('file', async (fieldName, fileStream, fileInfo) => {
-      const { mimeType, ..._ } = fileInfo;
-      // Only Process Zip files
+      const { filename, mimeType, ..._ } = fileInfo;
       if (
         mimeType !== 'application/x-zip-compressed' &&
         mimeType !== 'application/zip'
@@ -42,17 +41,15 @@ export class FilesController {
         fileStream.resume();
         return;
       }
-
-      const promise = this.streamService
-        .processZipXML(fileStream)
-        .catch((error) => {
-          console.error('Error processing file:', error);
-        });
-      promises.push(promise);
+      console.log('zip name: ', filename);
+      fileStream.pipe(unzipper.Parse()).on('entry', function (entry) {
+        const fileName = entry.path;
+        console.log('xml:', fileName);
+        entry.autodrain();
+      });
     });
 
     busboy.on('close', async () => {
-      await Promise.all(promises);
       console.log('All zips files processed!');
       const used = process.memoryUsage().heapUsed / 1024 / 1024;
       console.log(`Total memory used: ${Math.round(used * 100) / 100} MB`);
@@ -63,12 +60,19 @@ export class FilesController {
   }
 
   @Post('multer/upload-zip')
-  @UseInterceptors(FileInterceptor('file'))
-  async uploadFile(@UploadedFile() file: Express.Multer.File) {
-    const sizeInMB = (file.size / (1024 * 1024)).toFixed(2);
-    console.log(`size: ${sizeInMB} MB`);
+  @UseInterceptors(FilesInterceptor('file'))
+  async uploadFile(@UploadedFiles() files: Array<Express.Multer.File>) {
+    for (const file of files) {
+      let xmlCount = 0;
+      const fileStream = Readable.from(file.buffer);
 
-    const fileStream = Readable.from(file.buffer);
-    return await this.streamService.processZipXML(fileStream);
+      fileStream.pipe(unzipper.Parse()).on('entry', function (entry) {
+        const fileName = entry.path;
+        console.log('xml:', fileName);
+        xmlCount++;
+        entry.autodrain();
+      });
+      console.log('total xml:', xmlCount);
+    }
   }
 }
